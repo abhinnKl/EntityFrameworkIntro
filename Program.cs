@@ -60,7 +60,6 @@ static async Task EntityStates(CookbookContextFactory factory)
     state = dbcontext.Entry(newDish).State;//--Modified
     await dbcontext.SaveChangesAsync();
 
-
     dbcontext.Dishes.Remove(newDish);
     state = dbcontext.Entry(newDish).State;//-->Deleted
     await dbcontext.SaveChangesAsync();
