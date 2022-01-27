@@ -45,6 +45,9 @@ newDish.Notes = "Baz";
 await dbcontext.SaveChangesAsync();
 await EntityStates(factory);
 await ChangeTracking(factory);
+await AttachEntity(factory);
+await NoTracking(factory);
+
 static async Task EntityStates(CookbookContextFactory factory)
 {
     using var dbcontext = factory.CreateDbContext();
@@ -80,6 +83,26 @@ static async Task ChangeTracking(CookbookContextFactory factory)
 
     using var dbContext2 = factory.CreateDbContext();
     var dishFromDataBase2 = await dbContext2.Dishes.SingleAsync(d => d.Id == newDish.Id);
+}
+static async Task AttachEntity(CookbookContextFactory factory)
+{
+
+    using var dbcontext = factory.CreateDbContext();
+    var newDish = new Dish { Title = "Foo", Notes = "Bar" };
+    await dbcontext.SaveChangesAsync();
+    //Forget the new dish
+    dbcontext.Entry(newDish).State = EntityState.Detached;
+    var state = dbcontext.Entry(newDish).State;
+    dbcontext.Dishes.Update(newDish);
+    await dbcontext.SaveChangesAsync();
+}
+static async Task NoTracking(CookbookContextFactory factory)
+{
+
+    using var dbcontext = factory.CreateDbContext();
+    //select query
+    var dishes = await dbcontext.Dishes.ToArrayAsync();
+    var state = dbcontext.Entry(dishes[0]).State;
 }
 class Dish
 {
