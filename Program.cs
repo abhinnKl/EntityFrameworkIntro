@@ -47,7 +47,14 @@ await EntityStates(factory);
 await ChangeTracking(factory);
 await AttachEntity(factory);
 await NoTracking(factory);
-
+await RawSql(factory);
+static async Task RawSql(CookbookContextFactory factory)
+{
+    using var dbcontext = factory.CreateDbContext();
+    var dishes = await dbcontext.Dishes
+        .FromSqlRaw("Select * from Dishes")
+        .ToArrayAsync();
+}
 static async Task EntityStates(CookbookContextFactory factory)
 {
     using var dbcontext = factory.CreateDbContext();
@@ -103,9 +110,26 @@ static async Task NoTracking(CookbookContextFactory factory)
     //select query
     var dishes = await dbcontext.Dishes.ToArrayAsync();
     var state = dbcontext.Entry(dishes[0]).State;
+
+    var newDishIngredient = new DishIngridient { MyID = 103, Amount = 10, Description = "Sample" };
+    var newDishIngridientCopy = new DishIngridient { MyID = 103, Amount = 10, Description = "Sample" };
+    dbcontext.Ingridients.Add(newDishIngredient);
+    //dbcontext.Ingridients.Add(newDishIngridientCopy);
+    await dbcontext.SaveChangesAsync();
+    var dish = new Dish
+    {
+
+        Title = "Foo",
+        Ingridients = new List<DishIngridient> {newDishIngridientCopy
+    }
+    };
+    dbcontext.Dishes.Add(dish);
+    await dbcontext.SaveChangesAsync();
 }
 class Dish
 {
+
+
     public int Id { get; set; }
     [MaxLength(100)]
     public string Title { get; set; }
@@ -116,6 +140,7 @@ class Dish
 }
 class DishIngridient
 {
+    public int MyID { get; set; }
     public int Id { get; set; }
     [MaxLength(100)]
     public string Description { get; set; }
@@ -123,8 +148,8 @@ class DishIngridient
     public string UnitOfMeasure { get; set; } = string.Empty;
     [Column(TypeName = "decimal(5,2)")]
     public decimal Amount { get; set; }
-    public Dish? Dish { get; set; }
-    public int DishId { get; set; }
+    //   public Dish? Dish { get; set; }
+    //public int DishId { get; set; }
 
 }
 class CookBookContext : DbContext
@@ -137,6 +162,11 @@ class CookBookContext : DbContext
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         base(options)
     { }
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<DishIngridient>()
+            .HasAlternateKey(c => c.MyID);
+    }
 }
 class CookbookContextFactory : IDesignTimeDbContextFactory<CookBookContext>
 {

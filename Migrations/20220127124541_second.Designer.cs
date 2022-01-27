@@ -2,14 +2,16 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EntityFrameworkIntro.Migrations
 {
     [DbContext(typeof(CookBookContext))]
-    partial class CookBookContextModelSnapshot : ModelSnapshot
+    [Migration("20220127124541_second")]
+    partial class second
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -56,6 +58,9 @@ namespace EntityFrameworkIntro.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("DishId")
+                        .HasColumnType("int");
+
                     b.Property<int>("MyID")
                         .HasColumnType("int");
 
@@ -68,7 +73,20 @@ namespace EntityFrameworkIntro.Migrations
 
                     b.HasAlternateKey("MyID");
 
+                    b.HasIndex("DishId");
+
                     b.ToTable("Ingridients");
+                });
+
+            modelBuilder.Entity("DishIngridient", b =>
+                {
+                    b.HasOne("Dish", "Dish")
+                        .WithMany()
+                        .HasForeignKey("DishId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Dish");
                 });
 #pragma warning restore 612, 618
         }
